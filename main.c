@@ -394,14 +394,17 @@ short_diff_fill_screen (WINDOW *win, HEXDIFF_DATA *data)
 	{	get_current_block (data) ;
 
 		for (file = 0 ; file < data->file_count ; file++)
-		{	if (file == 0 || (data->fd [0].offset != data->fd [file].offset))
+		{
+			/* Print the hex address but only for the first file (eg, when in multi-file diff mode) */
+			if (file == 0 || (data->fd [0].offset != data->fd [file].offset))
 			{	wattrset (win, COLOR_PAIR (3)) ;
 				wprintw (win, "%08X:", data->offset + data->fd [file].offset) ;
 				}
 			else
 				wprintw (win, "         ") ;
 
-			for (m = 0 ; m < data->block_length / sizeof (short) ; m++)
+			/* 16 bit hex dump. */
+			for (m = 0 ; m < data->fd [file].line_length / sizeof (short) / 2 ; m++)
 			{	wattrset (win, COLOR_PAIR (0)) ;
 				waddch (win, ' ') ;
 				wattrset (win, COLOR_PAIR (data->diffs.sd [m])) ;
@@ -409,9 +412,14 @@ short_diff_fill_screen (WINDOW *win, HEXDIFF_DATA *data)
 				} ;
 
 			wattrset (win, COLOR_PAIR (0)) ;
+			for ( ; m < data->block_length / sizeof (short) ; m++)
+				wprintw (win, "     ") ;
+
+			/* Space between 16 bit hex and character display. */
+			wattrset (win, COLOR_PAIR (0)) ;
 			wprintw (win, "  ") ;
 
-			for (m = 0 ; m < data->block_length ; m++)
+			for (m = 0 ; m < (size_t) data->fd [file].line_length / 2 ; m++)
 			{	if ((m % 8) == 0)
 					waddch (win, ' ') ;
 				wattrset (win, COLOR_PAIR (data->diffs.cd [m])) ;
@@ -419,12 +427,17 @@ short_diff_fill_screen (WINDOW *win, HEXDIFF_DATA *data)
 				waddch (win, isprint (ch) ? ch : '.') ;
 				} ;
 
-			wattrset (win, COLOR_PAIR (0)) ;
-			wprintw (win, "  ") ;
+			wattrset (win, COLOR_PAIR (data->diffs.cd [m])) ;
+			for ( ; m < data->block_length  ; m++)
+				waddch (win, ' ') ;
 
-			for (m = 0 ; m < data->block_length / sizeof (short) ; m++)
+			wattrset (win, COLOR_PAIR (0)) ;
+			waddch (win, ' ') ;
+
+			/* Short int display */
+			for (m = 0 ; m < data->fd [file].line_length / sizeof (short) / 2 ; m++)
 			{	wattrset (win, COLOR_PAIR (data->diffs.sd [m])) ;
-				wprintw (win, "%7d ", data->fd [file].data.s [m]) ;
+				wprintw (win, " %7d", data->fd [file].data.s [m]) ;
 				}
 
 			waddch (win, '\n') ;
