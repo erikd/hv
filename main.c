@@ -47,7 +47,6 @@ static	HEXDIFF_DATA data ;
 /*--------------------------------------------------------------------
 ** Function Prototypes.
 */
-static	void sigint_handler (int sig) ;
 
 static	void hexdiff_fill_screen (WINDOW *win, HEXDIFF_DATA *data) ;
 static	void lines_fill_screen (WINDOW *win, HEXDIFF_DATA *data) ;
@@ -67,7 +66,6 @@ int
 main	(int argc, char *argv [])
 {	ScreenFunc	fill_screen ;
 	WINDOW		*main_win ;
-	struct		sigaction sigdata ;
 	int			ch = 0, k, ch_mem = 0 ;
 
 	printf ("%s - %d.%02d\n", ProgName, VERSION_MAJOR, VERSION_MINOR) ;
@@ -82,12 +80,6 @@ main	(int argc, char *argv [])
 		} ;
 
 	fill_screen = hexdiff_fill_screen ;
-
-	/* 	Set up signal handler to restore the normal screen
-	**	operation if the program is killed.
-	*/
-	sigdata.sa_handler = sigint_handler ;
-	sigaction (SIGINT, &sigdata, NULL) ;
 
 	/* Do curses stuff. */
 	main_win = initscr () ;				/* initialize the curses library */
@@ -561,12 +553,6 @@ double_fill_screen (WINDOW *win, HEXDIFF_DATA *data)
 
 	return ;
 }	/* double_fill_screen */
-
-static void
-sigint_handler (int sig)
-{
-	sig = sig ;
-}	/* sigint_handler */
 
 static void
 atexit_handler (void)
